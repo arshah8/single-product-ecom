@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useProducts } from '../hooks/useProducts';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
@@ -18,14 +18,14 @@ export default function ProductList() {
   const [allProducts, setAllProducts] = useState([]);
 
   // The filters are derived directly from URL to ensure single source of truth
-  const filters = {
+  const filters = useMemo(() => ({
     search: searchParams.get('search') || '',
     category: searchParams.get('category') || '',
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
     inStock: searchParams.get('inStock') || '',
     sort: searchParams.get('sort') || '',
-  };
+  }), [searchParams]);
 
   const { products, pagination, isLoading, isError, error, mutate } = useProducts({
     ...filters,
@@ -59,17 +59,17 @@ export default function ProductList() {
     if (currentFiltersStr !== prevFiltersRef.current) return;
 
     if (page === 1) {
-      setAllProducts(products);
-      prevProductsIdsRef.current = products.map(p => p._id).join(',');
+      setAllProducts(products.filter(p => p));
+      prevProductsIdsRef.current = products.filter(p => p).map(p => p._id).join(',');
       prevPageRef.current = 1;
     } else {
-      const currentProductsIds = products.map(p => p._id).join(',');
+      const currentProductsIds = products.filter(p => p).map(p => p._id).join(',');
       const productsChanged = currentProductsIds !== prevProductsIdsRef.current;
 
       if (productsChanged) {
         setAllProducts((prev) => {
           const existingIds = new Set(prev.map(p => p._id));
-          const newProducts = products.filter(p => !existingIds.has(p._id));
+          const newProducts = products.filter(p => p && !existingIds.has(p._id));
           return [...prev, ...newProducts];
         });
         prevProductsIdsRef.current = currentProductsIds;

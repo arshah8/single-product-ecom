@@ -15,15 +15,16 @@ export default function OrderSummary({ cart, shippingCost = 0 }) {
 
       {/* Cart Items */}
       <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-        {cart?.items?.map((item) => {
+        {cart?.items?.map((item, index) => {
           // Handle both populated and unpopulated productId
-          const productId = typeof item.productId === 'object' ? item.productId._id : item.productId;
-          const product = typeof item.productId === 'object' ? item.productId : item.product;
+          const isPopulated = item.productId && typeof item.productId === 'object';
+          const productId = isPopulated ? item.productId._id : item.productId;
+          const product = isPopulated ? item.productId : item.product;
           const unitPrice = item.unitPrice || item.price || 0;
           const itemTotal = item.subtotal || (unitPrice * item.quantity);
 
           return (
-            <div key={productId} className="flex items-center justify-between text-sm">
+            <div key={item._id || index} className="flex items-center justify-between text-sm">
               <div className="flex-1">
                 <p className="font-medium text-gray-900 dark:text-gray-100 transition-colors">{product?.name || 'Product'}</p>
                 <p className="text-gray-500 dark:text-gray-400 transition-colors">Qty: {item.quantity}</p>
